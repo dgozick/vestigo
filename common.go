@@ -9,6 +9,7 @@ package vestigo
 import (
 	"context"
 	"net/http"
+	"strings"
 )
 
 // methods - a list of methods that are allowed
