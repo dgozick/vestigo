@@ -1,4 +1,4 @@
-// +build go1.7
+// +build !go1.7
 
 // Copyright 2015 Husobee Associates, LLC.  All rights reserved.
 // Use of this source code is governed by The MIT License, which
@@ -7,8 +7,9 @@
 package vestigo
 
 import (
-	"context"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 // methods - a list of methods that are allowed
@@ -30,27 +31,15 @@ var AllowTrace = false
 
 // Param - Get a url parameter by name
 func Param(r *http.Request, name string) string {
-	// use the request context
-	if v, ok := r.Context().Value("vestigo_" + name).(string); ok {
-		return v
-	}
-	return ""
+	return r.URL.Query().Get(":" + name)
 }
 
-// ParamNames - Get a url parameter name list with the leading :
+// ParamNames - Get a url parameter name list
 func ParamNames(r *http.Request) []string {
-	if v, ok := r.Context().Value("vestigo_param_names").([]string); ok {
-		return v
-	}
-	return []string{}
-}
-
-// TrimmedParamNames - Get a url parameter name list without the leading :
-func TrimmedParamNames(r *http.Request) []string {
 	var names []string
 	for k := range r.URL.Query() {
 		if strings.HasPrefix(k, ":") {
-			names = append(names, strings.TrimPrefix(k, ":"))
+			names = append(names, k)
 		}
 	}
 	return names
@@ -60,15 +49,12 @@ func TrimmedParamNames(r *http.Request) []string {
 // Appends :name=value onto a blank request query string or appends &:name=value
 // onto a non-blank request query string
 func AddParam(r *http.Request, name, value string) {
-	paramNames := []string{name}
-	if v, ok := r.Context().Value("vestigo_param_names").([]string); ok {
-		for _, vv := range v {
-			paramNames = append(paramNames, vv)
-		}
+	q := url.QueryEscape(":"+name) + "=" + url.QueryEscape(value)
+	if r.URL.RawQuery != "" {
+		r.URL.RawQuery += "&" + q
+	} else {
+		r.URL.RawQuery += q
 	}
-	ctx := context.WithValue(r.Context(), "vestigo_"+name, value)
-	ctx = context.WithValue(ctx, "vestigo_param_names", paramNames)
-	*r = *r.WithContext(ctx)
 }
 
 //validMethod - validate that the http method is valid.

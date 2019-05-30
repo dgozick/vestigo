@@ -556,7 +556,6 @@ func TestRouterParamNames(t *testing.T) {
 func TestRouterParamGet(t *testing.T) {
 	r := NewRouter()
 	r.Add("GET", "/users/:uid", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "222", r.URL.Query().Get(":uid"))
 		assert.Equal(t, "222", Param(r, "uid"))
 		assert.Equal(t, "red", r.URL.Query().Get("color"))
 		assert.Equal(t, "burger", r.URL.Query().Get("food"))
@@ -572,7 +571,6 @@ func TestRouterParamPost(t *testing.T) {
 	r.Add("POST", "/users/:uid", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "123", r.FormValue("id"))
 		assert.Equal(t, "123", r.Form.Get("id"))
-		assert.Equal(t, "222", r.URL.Query().Get(":uid"))
 		assert.Equal(t, "222", Param(r, "uid"))
 		assert.Equal(t, "red", r.URL.Query().Get("color"))
 		assert.Equal(t, "burger", r.URL.Query().Get("food"))
