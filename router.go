@@ -29,6 +29,7 @@ type Middleware func(http.HandlerFunc) http.HandlerFunc
 type Router struct {
 	root       *node
 	globalCors *CorsAccessControl
+	middleware []Middleware
 }
 
 // NewRouter - Create a new vestigo router
@@ -59,6 +60,11 @@ func (r *Router) SetGlobalCors(c *CorsAccessControl) {
 // overlaps.
 func (r *Router) SetCors(path string, c *CorsAccessControl) {
 	r.addWithCors("CORS", path, nil, c)
+}
+
+// SetMiddleware
+func (r *Router) SetMiddleware(m ...Middleware) {
+	r.middleware = m
 }
 
 // ServeHTTP - implementation of a http.Handler, making Router a http.Handler
@@ -134,7 +140,7 @@ func (r *Router) Add(method, path string, h http.HandlerFunc, middleware ...Midd
 
 // Add - Add a method/handler combination to the router
 func (r *Router) add(method, path string, h http.HandlerFunc, cors *CorsAccessControl, middleware ...Middleware) {
-	h = buildChain(h, middleware...)
+	h = buildChain(h, append(r.middleware, middleware...))
 	pnames := make(pNames)
 	pnames[method] = []string{}
 
@@ -475,12 +481,12 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 	}
 }
 
-func buildChain(f http.HandlerFunc, m ...Middleware) http.HandlerFunc {
+func buildChain(f http.HandlerFunc, m []Middleware) http.HandlerFunc {
 
 	// if our chain is done, use the original handlerfunc
 	if len(m) == 0 {
 		return f
 	}
 	// otherwise nest the handlerfuncs
-	return m[0](buildChain(f, m[1:cap(m)]...))
+	return m[0](buildChain(f, m[1:len(m)]))
 }
