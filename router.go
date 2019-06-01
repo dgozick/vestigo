@@ -62,9 +62,10 @@ func (r *Router) SetCors(path string, c *CorsAccessControl) {
 	r.addWithCors("CORS", path, nil, c)
 }
 
-// SetMiddleware
-func (r *Router) SetMiddleware(m ...Middleware) {
-	r.middleware = m
+// AddMiddleware - add middleware handlers to execute on all requests before
+// the route handler
+func (r *Router) AddMiddleware(m ...Middleware) {
+	r.middleware = append(r.middleware, m...)
 }
 
 // ServeHTTP - implementation of a http.Handler, making Router a http.Handler
